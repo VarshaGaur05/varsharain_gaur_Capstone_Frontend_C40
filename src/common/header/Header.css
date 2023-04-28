@@ -1,0 +1,38 @@
+.header {
+    background-color: #800080;
+    height: 35px;
+    padding: 11px;
+    display: flex;
+    justify-content: space-between;
+}
+.heading{
+       color: #fff;
+       font-size: 18px;
+       font-weight: 700;
+      display:flex;
+}
+
+.heading h2{display: contents;}
+.app-logo {
+    background-color: #ff7f7f;
+    height: 35px;
+    margin-right: 20px;
+}
+.loginButton{
+    background-color: #008CBA;
+}
+
+.logoutButton{
+    background-color: #f44336;
+}
+#parent-modal-title{
+     color: #fff;
+     background-color: #800080;
+     height: 35px;
+     padding: 11px;
+     margin: -2px;
+
+}
+.tab-list-container{
+    padding: 0 5px;
+}
