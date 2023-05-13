@@ -1,0 +1,20 @@
+.authentication-customize {
+    text-align: center;
+    margin-bottom: -20px;
+}
+
+.error-popup {
+    width: 80%;
+    background: #464646;
+    color: white;
+    padding: 12px;
+    position: absolute;
+    bottom: -40px;
+    border-radius: 5px;
+    font-size: 0.7em;
+}
+
+#invalid-error {
+    color: red;
+    font-size: 0.8em;
+}

@@ -1,100 +1,145 @@
-import React, { useState } from "react";
-import Header from "../../common/common.css";
+import React from "react";
+import "./Login.css";
+import "../Common.css";
+import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import Input from "@material-ui/core/Input";
-import FormControl from "@material-ui/core/FormControl";
-import Button from "@material-ui/core/Button";
 import FormHelperText from "@material-ui/core/FormHelperText";
+import Button from "@material-ui/core/Button";
+import { useAuthContext } from "../../hooks/useAuthContext";
 
-const Login = (props) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+const Login = (props, baseUrl) => {
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
 
-    const [reqEmail, setReqEmail] = useState('dispNone')
-    const [reqPassword, setReqPassword] = useState('dispNone')
+  const [userDetails, setUserDetails] = React.useState(null);
 
+  const [emailError, setErrorForEmail] = React.useState(false);
+  const [passwordError, setErrorForPassword] = React.useState(false);
 
-    const onEmailChanged = (e) => {
-        setEmail(e.target.value.split(","));
+  const [invalidEmail, setErrorForInvalidEmail] = React.useState(false);
+
+  const [loggedIn, setLoggedIn] = React.useState(false);
+
+  const { dispatch } = useAuthContext();
+
+  const loginURL = "http://localhost:8080/auth/login";
+
+  const emailChangeHandler = (e) => {
+    setEmail(e.target.value);
+    setErrorForInvalidEmail(false);
+  };
+
+  const passwordChangeHandler = (e) => {
+    setPassword(e.target.value);
+  };
+
+  const loginHandler = (e) => {
+    if (e) e.preventDefault();
+
+    let flag = true;
+
+    email === "" ? setErrorForEmail(true) : setErrorForEmail(false);
+    password === "" ? setErrorForPassword(true) : setErrorForPassword(false);
+
+    const encodeEmailAndPassword = window.btoa(`${email}:${password}`);
+
+    const pattern =
+      /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\\.,;:\s@"]{2,})$/i;
+
+    if (!email.match(pattern)) {
+      setErrorForInvalidEmail(true);
+      flag = false;
+    } else {
+      setErrorForInvalidEmail(false);
     }
-
-    const onPasswordChange = (e) => {
-        setPassword(e.target.value.split(","));
+    if (flag) {
+      fetch(loginURL, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+          Accept: "application/json;Charset=UTF-8",
+          Authorization: `Basic ${encodeEmailAndPassword}`,
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error("Something went wrong");
+          }
+        })
+        .then((userDetails) => {
+          setLoggedIn(true);
+          setUserDetails(userDetails);
+          dispatch({ type: "LOGIN", payload: userDetails.accessToken });
+          sessionStorage.setItem("access-token", userDetails.accessToken);
+          sessionStorage.setItem("emailId", userDetails.emailAddress);
+          setTimeout(() => {
+            props.handleModalClose();
+          }, 1000);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
+  };
 
-    const onLoginButtonClick = async () => {
-        if (validateUserInput()) {
-            const param = window.btoa(`${email[0]}:${password[0]}`)
-            try {
-                const rawResponse = await fetch('http://localhost:8085/api/v1/auth/login', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json;charset=UTF-8",
-                        "Accept": "application/json;charset=UTF-8",
-                        authorization: `Basic ${param}`
-                    },
-                })
-
-                const response = await rawResponse.json()
-
-                if (rawResponse.ok) {
-                    window.sessionStorage.setItem('user-details', JSON.stringify(response));
-                    window.sessionStorage.setItem('access-token', rawResponse.headers.get('access-token'));
-                    if(sessionStorage.getItem('access-token')) {
-                        props.setIsLoggedIn(true);
-                        props.handleClose()
-                    }
-                } else {
-                    throw (new Error(response.message || 'Something went wrong!'))
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
-            }
-        }
-        return;
-    }
-
-    const validateUserInput = () => {
-        email === '' ? setReqEmail('dispBlock') : setReqEmail("dispNone");
-        password === '' ? setReqPassword('dispBlock') : setReqPassword("dispNone");
-
-        if (email === "" || password === "") {
-            return false;
-        }
-
-        return true;
-    }
-
-
-    return (
-        <div className="container">
-            <div>
-                <FormControl required className="formControl">
-                    <InputLabel htmlFor="username">Email</InputLabel>
-                    <Input id="username" value={email} onChange={onEmailChanged} />
-                    <FormHelperText className={reqEmail}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-
-
-                <br /> <br />
-                <FormControl required className="formControl">
-                    <InputLabel htmlFor="password">Password</InputLabel>
-                    <Input id="password" value={password} onChange={onPasswordChange} />
-                    <FormHelperText className={reqPassword}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-            </div>
-
-            <br /> <br />
-
-            <div className="btn-holder">
-                <Button variant="contained" color='primary' onClick={onLoginButtonClick}>Login</Button>
-            </div>
-        </div>
-    )
-}
+  return (
+    <div>
+      <form
+        noValidate
+        className="authentication-customize"
+        autoComplete="off"
+        onSubmit={loginHandler}
+      >
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="username">Email</InputLabel>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={emailChangeHandler}
+          />
+          <div>
+            {email.length >= 1 && invalidEmail === true && (
+              <FormHelperText id="invalid-error">
+                Enter valid Email
+              </FormHelperText>
+            )}
+          </div>
+          {email.length === 0 && emailError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
+        <br />
+        <br />
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="loginPassword">Password</InputLabel>
+          <Input
+            id="loginPassword"
+            type="password"
+            value={password}
+            onChange={passwordChangeHandler}
+          />
+          {password.length === 0 && passwordError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
+        <br />
+        <br />
+        <FormControl>
+          {loggedIn === true && (
+            <span className="login-success">Login Successful!</span>
+          )}
+        </FormControl>
+        <br />
+        <Button type="submit" variant="contained" color="primary">
+          LOGIN
+        </Button>
+      </form>
+    </div>
+  );
+};
 
 export default Login;

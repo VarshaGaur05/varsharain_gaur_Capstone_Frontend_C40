@@ -1,177 +1,219 @@
-import React, { useState } from "react";
+import React from "react";
+import "./Register.css";
+import "../Common.css";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import Input from "@material-ui/core/Input";
-import Button from "@material-ui/core/Button";
 import FormHelperText from "@material-ui/core/FormHelperText";
-import Header from "../../common/common.css";
+import Button from "@material-ui/core/Button";
 
 const Register = (props) => {
-    const [firstName, setFirstName] = useState('');
-    const [reqFirstName, setReqFirstName] = useState("dispNone");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [mobileNumber, setMobileNumber] = React.useState("");
 
-    const [lastName, setLastName] = useState('');
-    const [reqLastName, setReqLastName] = useState("dispNone");
+  const [firstNameError, setErrorForFirstName] = React.useState(false);
+  const [lastNameError, setErrorForLastName] = React.useState(false);
+  const [emailError, setErrorForEmail] = React.useState(false);
+  const [passwordError, setErrorForPassword] = React.useState(false);
+  const [mobileNumberError, setErrorForMobileNumber] = React.useState(false);
 
-    const [email, setEmail] = useState('');
-    const [reqEmail, setReqEmail] = useState("dispNone");
+  const [inValidMobileNumber, setErrorForInValidMobileNumber] =
+    React.useState(false);
 
-    const [password, setPassword] = useState('');
-    const [reqPassword, setReqPassword] = useState("dispNone");
+  const [validEmail, setErrorForInvalidEmail] = React.useState(false);
 
-    const [contactNo, setContactNo] = useState('');
-    const [reqContactNo, setReqContactNo] = useState("dispNone");
+  const [registration, setRegistrationSuccess] = React.useState(false);
 
-    const [registrationStatus, setRegistrationStatus] = useState(false);
+  const firstNameChangeHandler = (e) => {
+    setFirstName(e.target.value);
+  };
 
-    const onFirstNameChanged = (e) => {
-        setFirstName(e.target.value.split(","))
+  const lastNameChangeHandler = (e) => {
+    setLastName(e.target.value);
+  };
+
+  const emailChangeHandler = (e) => {
+    setEmail(e.target.value);
+    setErrorForInvalidEmail(false);
+  };
+
+  const passwordChangeHandler = (e) => {
+    setPassword(e.target.value);
+  };
+
+  const mobileNumberChangeHandler = (e) => {
+    setMobileNumber(e.target.value);
+    setErrorForInValidMobileNumber(false);
+  };
+
+  const registrationHandler = (e) => {
+    if (e) e.preventDefault();
+
+    let flag = true;
+
+    const pattern =
+      /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\\.,;:\s@"]{2,})$/i;
+
+    firstName === "" ? setErrorForFirstName(true) : setErrorForFirstName(false);
+    lastName === "" ? setErrorForLastName(true) : setErrorForLastName(false);
+    email === "" ? setErrorForEmail(true) : setErrorForEmail(false);
+    password === "" ? setErrorForPassword(true) : setErrorForPassword(false);
+    mobileNumber === ""
+      ? setErrorForMobileNumber(true)
+      : setErrorForMobileNumber(false);
+
+    if (mobileNumber.length !== 10) {
+      setErrorForInValidMobileNumber(true);
+      flag = false;
+    } else {
+      setErrorForInValidMobileNumber(false);
     }
 
-    const onLastNameChanged = (e) => {
-        setLastName(e.target.value.split(","))
+    if (!email.match(pattern)) {
+      setErrorForInvalidEmail(true);
+      flag = false;
+    } else {
+      setErrorForInvalidEmail(false);
     }
 
-    const onEmailChanged = (e) => {
-        setEmail(e.target.value.split(","))
+    if (flag) {
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: firstName,
+          lastName: lastName,
+          mobile: mobileNumber,
+          password: password,
+          emailId: email,
+        }),
+      };
+      fetch("http://localhost:8080/users/register", requestOptions)
+        .then((response) => {
+          if (response.ok) {
+            setRegistrationSuccess(true);
+          }
+          setTimeout(() => {
+            props.handleModalClose();
+          }, 1000);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
+  };
 
-    const onPasswordChanged = (e) => {
-        setPassword(e.target.value.split(","))
-    }
+  return (
+    <div>
+      <form
+        noValidate
+        className="authentication-customize"
+        autoComplete="off"
+        onSubmit={registrationHandler}
+      >
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="firstname">First Name</InputLabel>
+          <Input
+            id="username"
+            value={firstName}
+            onChange={firstNameChangeHandler}
+            type="text"
+          />
+          {firstName.length === 0 && firstNameError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
 
-    const onContactNoChanged = (e) => {
-        setContactNo(e.target.value.split(","))
-    }
-
-    const onRegisterButtonClick = async () => {
-        if (validateUserInput()) {
-            const registerBody = {
-                "email_address": email[0],
-                "first_name": firstName[0],
-                "last_name": lastName[0],
-                "mobile_number": contactNo[0],
-                "password": password[0]
-            }
-
-            try {
-                const rawResponse = await fetch('http://localhost:8085/api/v1/signup', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json;charset=UTF-8",
-                        "Accept": "application/json;charset=UTF-8"
-                    },
-                    body: JSON.stringify(registerBody)
-                })
-
-                const response = await rawResponse.json()
-
-                if (rawResponse.ok) {
-                    setRegistrationStatus(true);
-                } else {
-                    throw (new Error(response.message || 'Something went wrong!'))
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
-            }
-        }
-    }
-
-    const validateUserInput = () => {
-        firstName === "" ? setReqFirstName("dispBlock") : setReqFirstName("dispNone");
-        lastName === "" ? setReqLastName("dispBlock") : setReqLastName("dispNone");
-        email === "" ? setReqEmail("dispBlock") : setReqEmail("dispNone");
-        password === "" ? setReqPassword("dispBlock") : setReqPassword("dispNone");
-        contactNo === "" ? setReqContactNo("dispBlock") : setReqContactNo("dispNone");
-
-        if (
-            firstName === "" ||
-            lastName === "" ||
-            email === "" ||
-            password === "" ||
-            contactNo === ""
-        ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    return (
-        <div className="container">
-            <div>
-                <FormControl required className="formControl">
-                    <InputLabel htmlFor="firstname">First Name</InputLabel>
-                    <Input id="firstname" value={firstName} onChange={onFirstNameChanged} />
-                    <FormHelperText className={reqFirstName}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-
-                <br /> <br />
-
-                <FormControl required className="formControl">
-                    <InputLabel htmlFor="lastname">Last Name</InputLabel>
-                    <Input id="lastname" value={lastName} onChange={onLastNameChanged} />
-                    <FormHelperText className={reqLastName}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-
-                <br /> <br />
-
-                <FormControl required className="formControl">
-                    <InputLabel htmlFor="email">Email</InputLabel>
-                    <Input id="email" type={"email"} value={email} onChange={onEmailChanged} />
-                    <FormHelperText className={reqEmail}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-
-                <br /> <br />
-
-                <FormControl required className="formControl">
-                    <InputLabel htmlFor="password">Password</InputLabel>
-                    <Input id="password" type={"password"} value={password} onChange={onPasswordChanged} />
-                    <FormHelperText className={reqPassword}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-
-                <br /> <br />
-
-                <FormControl required  className="formControl">
-                    <InputLabel htmlFor="contact-no">Mobile No.</InputLabel>
-                    <Input id="contact-no" value={contactNo} onChange={onContactNoChanged} />
-                    <FormHelperText className={reqContactNo}>
-                        <span className="red">Required</span>
-                    </FormHelperText>
-                </FormControl>
-
-                <br /> <br />
-
-                {registrationStatus ? <RegistrationSuccessMessage /> : null}
-
-            </div>
-
-            <br />
-
-            <div className="btn-holder">
-                <Button
-                    variant="contained"
-                    onClick={onRegisterButtonClick}
-                    color="primary">
-                    Register
-                </Button>
-            </div>
-        </div>
-    )
-}
-
-function RegistrationSuccessMessage() {
-    return (
-        <div><p>Registration Successful. Please Login!</p></div>
-    )
-}
+        <br />
+        <br />
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="lastname">Last Name</InputLabel>
+          <Input
+            id="lastname"
+            value={lastName}
+            onChange={lastNameChangeHandler}
+            type="text"
+          />
+          {lastName.length === 0 && lastNameError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
+        <br />
+        <br />
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="email">Email</InputLabel>
+          <Input
+            id="email"
+            value={email}
+            onChange={emailChangeHandler}
+            type="email"
+          />
+          <div>
+            {email.length >= 1 && validEmail === true && (
+              <FormHelperText id="invalid-error">
+                Enter valid Email
+              </FormHelperText>
+            )}
+          </div>
+          {email.length === 0 && emailError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
+        <br />
+        <br />
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="password">Password</InputLabel>
+          <Input
+            id="loginPassword"
+            value={password}
+            onChange={passwordChangeHandler}
+            type="password"
+          />
+          {password.length === 0 && passwordError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
+        <br />
+        <br />
+        <FormControl variant="standard" required>
+          <InputLabel htmlFor="mobile">Mobile No.</InputLabel>
+          <Input
+            id="mobile"
+            value={mobileNumber}
+            onChange={mobileNumberChangeHandler}
+            type="number"
+          />
+          <div>
+            {mobileNumber.length >= 1 && inValidMobileNumber === true && (
+              <FormHelperText id="invalid-error">
+                Enter valid mobile number
+              </FormHelperText>
+            )}
+          </div>
+          {mobileNumber.length === 0 && mobileNumberError === true && (
+            <span className="error-popup">Please fill out this field</span>
+          )}
+        </FormControl>
+        <br />
+        <br />
+        {registration === true && (
+          <FormControl>
+            <span className="registration-succes">Registration Successful</span>
+          </FormControl>
+        )}
+        <br />
+        <Button type="submit" variant="contained" color="primary">
+          REGISTER
+        </Button>
+      </form>
+    </div>
+  );
+};
 
 export default Register;

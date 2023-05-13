@@ -1,0 +1,11 @@
+.login-success {
+    margin-bottom: 8px;
+    color:green;
+    font-weight: 500;
+}
+
+.login-failed {
+    margin-bottom: 8px;
+    color: red;
+    font-weight: 500;
+}

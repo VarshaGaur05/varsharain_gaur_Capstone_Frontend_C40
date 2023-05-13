@@ -1,0 +1,122 @@
+#select-header {
+    margin-top: 15px;
+    margin-right: 65px;
+    font-weight: 400;
+    text-align: center;
+    font-size: 1.1em;
+    color: #000;
+}
+
+#select-speciality {
+    text-align: left;
+    padding: 20px 0 10px 10px;
+    background-color: #DCDCDC;
+}
+
+.paper-customize {
+    width: 40%;
+    text-align: left;
+    padding: 20px;
+    margin: 15px;
+    cursor: pointer;
+}
+
+.doctor-customize {
+    font-size: 1.3em;
+    color: #000;
+}
+
+.speciality-customize {
+    font-size: 1.1em;
+    color: #000;
+}
+
+.rating-customize {
+    font-size: 1.1em;
+    color: #000;
+}
+
+#booknow-button-customize {
+    width: 40%;
+    font-weight: 300;
+    margin: 10px;
+}
+
+#viewdetails-button-customize {
+    width: 40%;
+    margin: 10px;
+    background-color: #008000;
+    color: white;
+    font-weight: 300;
+}
+
+#viewdetails-button-customize:hover {
+    background-color: #066806;
+}
+
+.button-div-customize {
+    padding: 10px 0px 15px 10px;
+}
+
+#booking-holder {
+    padding: 20px;
+    cursor: pointer;
+    text-align: left;
+}
+
+#book-appointment-container {
+    padding: 10px;
+}
+
+#demo-simple-select {
+    width: 70px;
+}
+
+#bookappointment-button-customize {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-weight: 400;
+}
+
+#modal-header-appointment {
+    font-size: 1.3em;
+}
+
+#modal-header-doctor {
+    font-size: 1.3em;
+}
+
+#doctor-name {
+    padding: 2px;
+    color: #000000;
+    font-weight: 400;
+    font-size: 1.3em;
+    margin-left: 10px;
+}
+
+#details-text {
+    padding: 2px;
+    color: #000000;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+.element.style {
+    width: 30%;
+}
+
+#invalid-error {
+    color: red;
+    font-size: 0.8em;
+}
+
+#card-content-customize {
+    padding-left: 5px;
+}
+
+#booking-success-customize {
+    margin-top: -20px;
+    font-size: 1em;
+    padding: 12px;
+    color: green;
+}

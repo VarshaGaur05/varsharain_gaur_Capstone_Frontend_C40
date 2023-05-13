@@ -1,128 +1,170 @@
-import React, { useEffect, useState } from "react";
-import './Header.css';
-import AppLogo from '../../assets/logo.jpeg'
-import { Button } from "@material-ui/core";
-import Modal from '@mui/material/Modal';
-import Box from '@mui/material/Box';
-import TabList from '@mui/lab/TabList';
-import TabPanel from '@mui/lab/TabPanel';
-import TabContext from '@mui/lab/TabContext';
-import Tab from '@mui/material/Tab';
-import Register from '../../screens/register/Register'
+import React from "react";
+import logo from "../../assets/logo.jpeg";
+import "./Header.css";
+import "../Common.css";
 import Login from "../../screens/login/Login";
-import { Link } from "react-router-dom";
+import Register from "../../screens/register/Register";
+import Tabs from "@material-ui/core/Tabs";
+import Tab from "@material-ui/core/Tab";
+import CardContent from "@material-ui/core/CardContent";
+import PropTypes from "prop-types";
+import Button from "@material-ui/core/Button";
+import Box from "@material-ui/core/Box";
+import Modal from "react-modal";
+import { withStyles } from "@material-ui/core/styles";
+import { Paper } from "@material-ui/core";
+import { useAuthContext } from "../../hooks/useAuthContext";
+import { useLogout } from "../../hooks/useLogout";
 
-const modalBoxStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    bgcolor: 'background.paper',
-    border: '1.5px solid #d3d3d3',
-    boxShadow: 24,
-    p: 4,
-    borderRadius: '5px',
-    padding : 0
+Modal.setAppElement(document.getElementById("root"));
+
+const customStyle = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    height: "auto",
+    padding: "0px",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+    border: "0.1px solid #D3D3D3",
+  },
 };
 
- const Header = (props) => {
+const styles = (theme) => ({
+  Paper: {
+    borderRadius: 5,
+    padding: 5,
+    border: "0.1px solid #D3D3D3",
+  },
+});
 
- const [isLoggedIn, setIsLoggedIn] = useState(false);
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
 
-     // state to manage modal
-     const [open, setOpen] = React.useState(false);
-     // functions to manage open/close of modal
-     const handleOpen = () => setOpen(true);
-     const handleClose = () => setOpen(false);
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 2 }}>
+          <div>{children}</div>
+        </Box>
+      )}
+    </div>
+  );
+}
 
+TabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+};
 
-     const [tabValue, setTabValue] = React.useState('1'); // state to handle tab values
-     const onTabChange = (event, newValue) => { // event handler for tab selection
-         setTabValue(newValue);
-     };
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
 
-     useEffect(() => {
-         // initial check if the user is already logged in or not.
-         const accessToken = sessionStorage.getItem('access-token')
-         if (accessToken) {
-             setIsLoggedIn(true);
-         }
-     }, [])
+const Header = (props) => {
+  const classes = props;
+  const [value, setValue] = React.useState(0);
+  const [open, setOpen] = React.useState(false);
 
+  const { userToken, dispatch } = useAuthContext();
 
-     let headerButton;
+  const { logout } = useLogout();
 
-     if (isLoggedIn) {
-         headerButton = <Button variant='contained' onClick={onLogoutButtonClick} className="logoutButton">Logout</Button>
-     } else {
-         headerButton = <Button variant='contained' onClick={handleOpen} className="loginButton">Login</Button>
-     }
+  const handleOpen = () => {
+    setOpen(true);
+  };
 
+  const handleClose = () => {
+    setOpen(false);
+  };
 
-     async function onLogoutButtonClick() {
-         try {
-             const rawResponse = await fetch('http://localhost:8085/api/v1/auth/logout', {
-                 method: "POST",
-                 headers: {
-                     "Content-Type": "application/json;charset=UTF-8",
-                     "Accept": "application/json;charset=UTF-8",
-                     authorization: `Bearer ${sessionStorage.getItem('access-token')}`
-                 },
-             });
-             if (rawResponse.ok) {
-                 sessionStorage.clear();
-                 setIsLoggedIn(false)
-             } else {
-                 const response = await rawResponse.json();
-                 throw (new Error(response.message || 'Something went wrong!'));
-             }
-         } catch (e) {
-             alert(`Error: ${e.message}`);
-         }
-     }
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
 
-     function LoginRegisterModal() {
-         return (
-             <Modal
-                 open={open}
-                 onClose={handleClose}
-                 aria-labelledby="modal-modal-title"
-                 aria-describedby="modal-modal-description">
-                 <Box sx={modalBoxStyle}>
-                  <h2 id="parent-modal-title">Authentication</h2>
-                     <TabContext value={tabValue}>
-                         <div className='tab-list-container'>
-                             <TabList onChange={onTabChange} aria-label="lab API tabs example">
-                                 <Tab label="Login" value="1" />
-                                 <Tab label="Register" value="2" />
-                             </TabList>
-                         </div>
-                         <TabPanel value="1"><Login setIsLoggedIn={setIsLoggedIn} handleClose={handleClose} /></TabPanel>
-                         <TabPanel value="2"><Register baseUrl={props.baseUrl} /></TabPanel>
-                     </TabContext>
-                 </Box>
-             </Modal>
-         )
-     }
+  const deleteToken = async () => {
+    sessionStorage.removeItem("access-token");
+    sessionStorage.removeItem("emailId");
+    sessionStorage.removeItem("appointmentId");
+    sessionStorage.removeItem("doctorId");
+    await logout();
+    dispatch({ type: "LOGOUT" });
+  };
 
-     const onBookButtonClick = () => {
-         if (!isLoggedIn) {
-             handleOpen()
-         }
-     }
- return (
-         <div className="header">
-                     <div className="heading">
-                         <img src={AppLogo} className='app-logo rotate-anim' alt='doctor-app-logo' />
-                         <h2 >Doctor Finder</h2>
-                     </div>
-                     <div>
-                         {headerButton}
-                     </div>
-                     <LoginRegisterModal />
-                 </div >
-     )
+  return (
+    <div>
+      <header className="header">
+        <img src={logo} className="logo" alt="BookMyConsultation App Logo" />
+        &nbsp;&nbsp;
+        <span id="header-title"> Doctor Finder </span>
+        <div className="login-button">
+          {!userToken || open ? (
+            <div className="login-button">
+              <Button variant="contained" color="primary" onClick={handleOpen}>
+                Login
+              </Button>
+            </div>
+          ) : (
+            <div className="login-button">
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={deleteToken}
+              >
+                Logout
+              </Button>
+            </div>
+          )}
+        </div>
+      </header>
 
- }
+      <Modal
+        isOpen={open}
+        onRequestClose={handleClose}
+        aria-labelledby="login-register"
+        aria-describedby="authentication"
+        style={customStyle}
+      >
+        <Paper className={classes.paper}>
+          <div className="typography">
+            <p>Authentication</p>
+          </div>
+          <CardContent>
+            <Tabs
+              aria-label="Login and Register"
+              onChange={handleChange}
+              value={value}
+              TabIndicatorProps={{ style: { background: "#F50057" } }}
+              centered
+            >
+              <Tab label="Login" {...a11yProps(0)} />
+              <Tab label="Register" {...a11yProps(1)} />
+            </Tabs>
 
-export default Header;
+            <TabPanel value={value} index={0}>
+              <Login handleModalClose={handleClose} />
+            </TabPanel>
+
+            <TabPanel value={value} index={1}>
+              <Register handleModalClose={handleClose} />
+            </TabPanel>
+          </CardContent>
+        </Paper>
+      </Modal>
+    </div>
+  );
+};
+
+export default withStyles(styles)(Header);
